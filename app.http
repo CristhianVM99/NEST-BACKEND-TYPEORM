@@ -1,0 +1,120 @@
+#################################################################################
+#       USERS
+#################################################################################
+### get users
+GET http://localhost:3000/api/users/all
+
+### get by id
+GET http://localhost:3000/api/users/5721f957-5148-412b-80e4-b308cd34a4fd
+
+### post 
+POST http://localhost:3000/api/users/register
+Content-Type: application/json
+
+{
+    "name":"patrick",
+    "email":"patrick2@gmail.com",
+    "username":"patrick2333",
+    "age":30,
+    "password":"patrick2333",
+    "gender":"MALE",
+    "boardsIds": ["dd885b1e-b707-44d5-ab38-42d9e394e208"]
+}
+
+### put
+PUT http://localhost:3000/api/users/edit/5721f957-5148-412b-80e4-b308cd34a4fd
+Content-Type: application/json
+
+{    
+    "boardsIds":["b9990f30-05d6-48a0-9b64-36efae01d9d0"]
+}
+
+### delete
+DELETE http://localhost:3000/api/users/delete/82ea7198-6224-43d3-a3cc-511719555eaa
+
+#################################################################################
+#       BOARDS
+#################################################################################
+GET http://localhost:3000/api/boards/all
+
+### get by id
+GET http://localhost:3000/api/boards/2e316a8b-af9e-4646-b481-5b73eebc4358
+
+### post 
+POST http://localhost:3000/api/boards/register
+Content-Type: application/json
+
+{
+    "title":"Cuarto Board",
+    "description":"description de board 4"
+}
+
+### put
+PUT http://localhost:3000/api/boards/edit/043012e7-24cd-41a0-b113-e37685f5aaef
+Content-Type: application/json
+
+{    
+    "title":"Primera Tarea Nº1"
+}
+
+### delete
+DELETE http://localhost:3000/api/boards/delete/ee909d24-5ce5-493d-b9d7-704b93c58208
+
+#################################################################################
+#       LISTS
+#################################################################################
+GET http://localhost:3000/api/lists/all
+
+### get by id
+GET http://localhost:3000/api/lists/043012e7-24cd-41a0-b113-e37685f5aaef
+
+### post 
+POST http://localhost:3000/api/lists/register
+Content-Type: application/json
+
+{
+    "title":"Primera Lista",
+    "description":"description de la lista 1"
+}
+
+### put
+PUT http://localhost:3000/api/lists/edit/4ec6ce2f-3f62-4ada-b8d5-cfd02d505e67
+Content-Type: application/json
+
+{    
+    "title":"Primera Lista Nº1"
+}
+
+### delete
+DELETE http://localhost:3000/api/lists/delete/4ec6ce2f-3f62-4ada-b8d5-cfd02d505e67
+
+#################################################################################
+#       TASK
+#################################################################################
+GET http://localhost:3000/api/tasks/all
+
+### get by id
+GET http://localhost:3000/api/tasks/043012e7-24cd-41a0-b113-e37685f5aaef
+
+### post 
+POST http://localhost:3000/api/tasks/register
+Content-Type: application/json
+
+{
+    "title":"Primera Lista",
+    "description":"description de la lista 1",
+    "dueDate":"2023-12-13T01:27:45.978Z",
+    "status":"NEW"
+
+}
+
+### put
+PUT http://localhost:3000/api/tasks/edit/ac56c598-88b5-48a6-a1aa-a49827942cc2
+Content-Type: application/json
+
+{    
+    "title":"Primera Task"
+}
+
+### delete
+DELETE http://localhost:3000/api/tasks/delete/ac56c598-88b5-48a6-a1aa-a49827942cc2

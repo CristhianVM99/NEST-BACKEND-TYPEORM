@@ -1,0 +1,27 @@
+version: '3.3'
+
+services:
+  postgres:
+    image: postgres:16.1
+    container_name: postgres
+    restart : always
+    environment:
+      - POSTGRES_DB=trelloapp
+      - POSTGRES_USER=trelloapp
+      - POSTGRES_PASSWORD=trellopass
+    volumes:
+      - ./db/init.sql:/docker-entrypoint.initdb.d/init.sql
+    ports:
+      - '5432:5432'
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=root@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=root
+      - PGADMIN_DEFAULT_DATABASE=trelloapp    
+    ports:
+      - '5050:80'
+    depends_on:
+      - postgres
