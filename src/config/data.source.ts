@@ -2,7 +2,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BoardEntity } from 'src/boards/entities/board.entity';
 import { ListEntity } from 'src/lists/entities/list.entity';
 import { TaskEntity } from 'src/tasks/entities/task.entity';
-import { UsersEntity } from 'src/users/entities/user.entity';
+import { UserEntity } from 'src/users/entities/user.entity';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
@@ -18,7 +18,7 @@ export const DataSourceConfig: DataSourceOptions = {
   port: configService.get('DB_PORT'),
   username: configService.get('DB_USER'),
   password: configService.get('DB_PASSWORD'),
-  entities: [UsersEntity, BoardEntity, ListEntity, TaskEntity],
+  entities: [UserEntity, BoardEntity, ListEntity, TaskEntity],
   migrations: [__dirname + '/../../migrations/*{.ts,.js}'],
   database: configService.get('DB_NAME'),
   synchronize: false,

@@ -5,14 +5,16 @@ import { ITask, taskStatus } from '../interfaces/task.interface';
 
 @Entity({ name: 'tasks' })
 export class TaskEntity extends BaseEntity implements ITask {
-  @Column()
+  @Column({ type: 'varchar', length: '255' })
   title: string;
-  @Column()
+  @Column({ type: 'varchar', length: '255' })
   description: string;
-  @Column()
+  @Column({ type: 'date' })
   dueDate: Date;
   @Column({ type: 'enum', enum: taskStatus })
   status: taskStatus;
-  @ManyToOne(() => ListEntity, (list) => list.tasks)
+  @ManyToOne(() => ListEntity, (list) => list.tasks, {
+    onDelete: 'CASCADE',
+  })
   list: ListEntity;
 }

@@ -5,31 +5,23 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { TaskEntity } from '../entities/task.entity';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { ErrorManager } from 'src/utils/error.manager';
+import { ListEntity } from 'src/lists/entities/list.entity';
 
 @Injectable()
 export class TasksService {
   constructor(
     @InjectRepository(TaskEntity)
     private readonly taskRepository: Repository<TaskEntity>,
+    @InjectRepository(ListEntity)
+    private readonly listRepository: Repository<ListEntity>,
   ) {}
-
-  public async createTask(createTaskDto: CreateTaskDto): Promise<TaskEntity> {
-    try {
-      return await this.taskRepository.save(createTaskDto);
-    } catch (error) {
-      throw ErrorManager.createSignatureError(error.message);
-    }
-  }
 
   public async findTasks(): Promise<TaskEntity[]> {
     try {
-      const tasks: TaskEntity[] = await this.taskRepository.find();
-      if (tasks.length === 0) {
-        throw new ErrorManager({
-          type: 'BAD_REQUEST',
-          message: 'No hay Registros',
-        });
-      }
+      const tasks: TaskEntity[] = await this.taskRepository.find({
+        relations: ['list'],
+      });
+      this.validateTaskRecords(tasks);
       return tasks;
     } catch (error) {
       throw ErrorManager.createSignatureError(error.message);
@@ -40,14 +32,23 @@ export class TasksService {
     try {
       const task = await this.taskRepository
         .createQueryBuilder('tasks')
+        .leftJoinAndSelect('tasks.list', 'list')
         .where({ id })
         .getOne();
-      if (!task) {
-        throw new ErrorManager({
-          type: 'BAD_REQUEST',
-          message: 'No se encontró el registro.',
-        });
-      }
+      this.validateTaskFound(task);
+      return task;
+    } catch (error) {
+      throw ErrorManager.createSignatureError(error.message);
+    }
+  }
+
+  public async createTask(createTaskDto: CreateTaskDto): Promise<TaskEntity> {
+    try {
+      const { listId, ...dataCreateTaskDto } = createTaskDto;
+      await this.validateListExists(listId);
+      const task = await this.taskRepository.save(dataCreateTaskDto);
+      if (listId && listId.length > 0) await this.setList(task.id, listId);
+      await this.taskRepository.save(task);
       return task;
     } catch (error) {
       throw ErrorManager.createSignatureError(error.message);
@@ -59,17 +60,14 @@ export class TasksService {
     updateTaskDto: UpdateTaskDto,
   ): Promise<UpdateResult | undefined> {
     try {
+      const { listId, ...dataUpdateTaskDto } = updateTaskDto;
+      if (listId && listId.length > 0) await this.setList(id, listId);
       const task: UpdateResult = await this.taskRepository.update(
         id,
-        updateTaskDto,
+        dataUpdateTaskDto,
       );
 
-      if (task.affected === 0) {
-        throw new ErrorManager({
-          type: 'BAD_REQUEST',
-          message: 'No se se pudo actualizar',
-        });
-      }
+      this.validateTaskUpdated(task);
       return task;
     } catch (error) {
       throw ErrorManager.createSignatureError(error.message);
@@ -79,15 +77,73 @@ export class TasksService {
   public async deleteTask(id: string): Promise<DeleteResult | undefined> {
     try {
       const task: DeleteResult = await this.taskRepository.delete(id);
-      if (task.affected === 0) {
-        throw new ErrorManager({
-          type: 'BAD_REQUEST',
-          message: 'No se se pudo eliminar',
-        });
-      }
+      this.validateTaskDeleted(task);
       return task;
     } catch (error) {
       throw ErrorManager.createSignatureError(error.message);
+    }
+  }
+
+  public async setList(id: string, listId: string): Promise<void> {
+    try {
+      const task = await this.taskRepository.findOne({
+        where: { id },
+        relations: ['list'],
+      });
+      const list = await this.listRepository.findOne({
+        where: { id: listId },
+      });
+      task.list = list;
+      await this.taskRepository.save(task);
+    } catch (error) {}
+  }
+
+  public async validateListExists(listId: string): Promise<void> {
+    const list = await this.listRepository.findOne({
+      where: { id: listId },
+    });
+
+    if (!list) {
+      throw new ErrorManager({
+        type: 'BAD_REQUEST',
+        message: `List with ID ${listId} not found.`,
+      });
+    }
+  }
+
+  private validateTaskRecords(tasks: TaskEntity[]): void {
+    if (tasks.length === 0) {
+      throw new ErrorManager({
+        type: 'BAD_REQUEST',
+        message: 'There are no records...',
+      });
+    }
+  }
+
+  private validateTaskFound(task: TaskEntity): void {
+    if (!task) {
+      throw new ErrorManager({
+        type: 'BAD_REQUEST',
+        message: 'Record not found.',
+      });
+    }
+  }
+
+  private validateTaskUpdated(task: UpdateResult): void {
+    if (task.affected === 0) {
+      throw new ErrorManager({
+        type: 'BAD_REQUEST',
+        message: 'Could not update',
+      });
+    }
+  }
+
+  private validateTaskDeleted(task: DeleteResult): void {
+    if (task.affected === 0) {
+      throw new ErrorManager({
+        type: 'BAD_REQUEST',
+        message: 'Could not delete',
+      });
     }
   }
 }

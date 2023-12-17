@@ -3,22 +3,27 @@ import { Column, Entity, JoinTable, ManyToMany } from 'typeorm';
 import { EGender, IUser } from '../interfaces/user.inteface';
 import { BoardEntity } from 'src/boards/entities/board.entity';
 
+/*
+ * entity user.
+ */
 @Entity({ name: 'users' })
-export class UsersEntity extends BaseEntity implements IUser {
-  @Column()
+export class UserEntity extends BaseEntity implements IUser {
+  @Column({ type: 'varchar', length: '255' })
   name: string;
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   email: string;
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   username: string;
-  @Column()
+  @Column({ type: 'integer' })
   age: number;
-  @Column()
+  @Column({ type: 'varchar' })
   password: string;
-  @Column({ type: 'enum', enum: EGender })
+  @Column({ type: 'enum', enum: EGender, default: EGender.MALE })
   gender: EGender;
 
-  @ManyToMany(() => BoardEntity, (board) => board.users)
+  @ManyToMany(() => BoardEntity, (board) => board.users, {
+    onDelete: 'CASCADE',
+  })
   @JoinTable()
   boards: BoardEntity[];
 }

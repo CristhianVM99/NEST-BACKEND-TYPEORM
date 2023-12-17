@@ -4,6 +4,10 @@ import { taskStatus } from '../interfaces/task.interface';
 export class CreateTaskDto {
   @IsNotEmpty()
   @IsString()
+  listId: string;
+
+  @IsNotEmpty()
+  @IsString()
   title: string;
 
   @IsNotEmpty()

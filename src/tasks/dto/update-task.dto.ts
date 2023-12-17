@@ -4,6 +4,10 @@ import { taskStatus } from '../interfaces/task.interface';
 export class UpdateTaskDto {
   @IsOptional()
   @IsString()
+  listId: string;
+
+  @IsOptional()
+  @IsString()
   title: string;
 
   @IsOptional()

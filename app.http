@@ -5,32 +5,31 @@
 GET http://localhost:3000/api/users/all
 
 ### get by id
-GET http://localhost:3000/api/users/5721f957-5148-412b-80e4-b308cd34a4fd
+GET http://localhost:3000/api/users/55f9a645-a429-4660-a3da-90cb988c369a
 
 ### post 
 POST http://localhost:3000/api/users/register
 Content-Type: application/json
 
 {
-    "name":"patrick",
-    "email":"patrick2@gmail.com",
-    "username":"patrick2333",
-    "age":30,
-    "password":"patrick2333",
-    "gender":"MALE",
-    "boardsIds": ["dd885b1e-b707-44d5-ab38-42d9e394e208"]
+    "name":"Kevin Canaza",
+    "email":"kevo@gmail.com",
+    "username":"kevan",
+    "age":22,
+    "password":"kevocs",
+    "gender":"OTRO"
 }
 
 ### put
-PUT http://localhost:3000/api/users/edit/5721f957-5148-412b-80e4-b308cd34a4fd
+PUT http://localhost:3000/api/users/edit/513dbf2e-dc2b-4ae9-8985-c694b50d6d98
 Content-Type: application/json
 
 {    
-    "boardsIds":["b9990f30-05d6-48a0-9b64-36efae01d9d0"]
+    "boardsIds":["2baeb039-57e2-4778-9fd6-0e33c8681b3d"]
 }
 
 ### delete
-DELETE http://localhost:3000/api/users/delete/82ea7198-6224-43d3-a3cc-511719555eaa
+DELETE http://localhost:3000/api/users/delete/b0094288-ee41-40f5-b032-53cccb1ad1c6
 
 #################################################################################
 #       BOARDS
@@ -38,27 +37,28 @@ DELETE http://localhost:3000/api/users/delete/82ea7198-6224-43d3-a3cc-511719555e
 GET http://localhost:3000/api/boards/all
 
 ### get by id
-GET http://localhost:3000/api/boards/2e316a8b-af9e-4646-b481-5b73eebc4358
+GET http://localhost:3000/api/boards/2baeb039-57e2-4778-9fd6-0e33c8681b3d
 
 ### post 
 POST http://localhost:3000/api/boards/register
 Content-Type: application/json
 
 {
-    "title":"Cuarto Board",
-    "description":"description de board 4"
+    "usersIds":["b0094288-ee41-40f5-b032-53cccb1ad1c6"],
+    "title":"actividades de la semana",
+    "description":"actividades y operaciones que realizar en la semana."
 }
 
 ### put
-PUT http://localhost:3000/api/boards/edit/043012e7-24cd-41a0-b113-e37685f5aaef
+PUT http://localhost:3000/api/boards/edit/17f633e6-e26c-4ae2-9549-a97dbba3ae07
 Content-Type: application/json
 
 {    
-    "title":"Primera Tarea Nº1"
+    "usersIds":["26cde860-d81c-4bff-ab1e-90746150bab6","5c222bcb-3a38-4444-b1e1-4b5055e21dc8"]
 }
 
 ### delete
-DELETE http://localhost:3000/api/boards/delete/ee909d24-5ce5-493d-b9d7-704b93c58208
+DELETE http://localhost:3000/api/boards/delete/fdcc7ba8-1925-4a0e-8d0a-0b1542545f28
 
 #################################################################################
 #       LISTS
@@ -66,27 +66,28 @@ DELETE http://localhost:3000/api/boards/delete/ee909d24-5ce5-493d-b9d7-704b93c58
 GET http://localhost:3000/api/lists/all
 
 ### get by id
-GET http://localhost:3000/api/lists/043012e7-24cd-41a0-b113-e37685f5aaef
+GET http://localhost:3000/api/lists/9f0af41c-c8bb-42e1-b926-d5b0240185f8
 
 ### post 
 POST http://localhost:3000/api/lists/register
 Content-Type: application/json
 
 {
-    "title":"Primera Lista",
-    "description":"description de la lista 1"
+    "boardId": "d3c7352a-8e6e-4a9d-8ccd-8b1598b59c96",
+    "title":"Lista del dia viernes",
+    "description":"proyectos a realizar para este dia viernes."
 }
 
 ### put
-PUT http://localhost:3000/api/lists/edit/4ec6ce2f-3f62-4ada-b8d5-cfd02d505e67
+PUT http://localhost:3000/api/lists/edit/646d2327-1190-4f94-a35d-8fc8d894169a
 Content-Type: application/json
 
 {    
-    "title":"Primera Lista Nº1"
+    "boardId":"8410744d-068e-4aeb-81d5-bf2a68fd7b88"
 }
 
 ### delete
-DELETE http://localhost:3000/api/lists/delete/4ec6ce2f-3f62-4ada-b8d5-cfd02d505e67
+DELETE http://localhost:3000/api/lists/delete/d3c7352a-8e6e-4a9d-8ccd-8b1598b59c96
 
 #################################################################################
 #       TASK
@@ -94,27 +95,28 @@ DELETE http://localhost:3000/api/lists/delete/4ec6ce2f-3f62-4ada-b8d5-cfd02d505e
 GET http://localhost:3000/api/tasks/all
 
 ### get by id
-GET http://localhost:3000/api/tasks/043012e7-24cd-41a0-b113-e37685f5aaef
+GET http://localhost:3000/api/tasks/99c9db65-8a83-49f1-8097-3acec26afb85
 
 ### post 
 POST http://localhost:3000/api/tasks/register
 Content-Type: application/json
 
 {
-    "title":"Primera Lista",
-    "description":"description de la lista 1",
+    "listId": "e5e6cf7c-d4d9-443a-94c1-8aa553719e20",
+    "title":"Creas aplicaciones web con nest.js",
+    "description":"Desarrollo web de una api rest full para nest.js y postgres",
     "dueDate":"2023-12-13T01:27:45.978Z",
     "status":"NEW"
-
 }
 
 ### put
-PUT http://localhost:3000/api/tasks/edit/ac56c598-88b5-48a6-a1aa-a49827942cc2
+PUT http://localhost:3000/api/tasks/edit/99c9db65-8a83-49f1-8097-3acec26afb85
 Content-Type: application/json
 
 {    
-    "title":"Primera Task"
+    "listId":"646d2327-1190-4f94-a35d-8fc8d894169a",
+    "description":"desarollo con nestJs"
 }
 
 ### delete
-DELETE http://localhost:3000/api/tasks/delete/ac56c598-88b5-48a6-a1aa-a49827942cc2
+DELETE http://localhost:3000/api/tasks/delete/e6ef5f12-3306-4f12-8d39-207d17dd204b

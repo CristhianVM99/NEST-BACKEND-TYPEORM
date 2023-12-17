@@ -5,89 +5,188 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ListEntity } from '../entities/list.entity';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { ErrorManager } from 'src/utils/error.manager';
+import { TaskEntity } from 'src/tasks/entities/task.entity';
+import { BoardEntity } from 'src/boards/entities/board.entity';
 
 @Injectable()
 export class ListsService {
   constructor(
     @InjectRepository(ListEntity)
     private readonly listRepository: Repository<ListEntity>,
+    @InjectRepository(TaskEntity)
+    private readonly taskRepository: Repository<TaskEntity>,
+    @InjectRepository(BoardEntity)
+    private readonly boardRepository: Repository<BoardEntity>,
   ) {}
 
+  /*
+   *    Method to get all lists.
+   */
   public async findLists(): Promise<ListEntity[]> {
     try {
-      const lists: ListEntity[] = await this.listRepository.find();
-      if (lists.length === 0) {
-        throw new ErrorManager({
-          type: 'BAD_REQUEST',
-          message: 'No hay Registros',
-        });
-      }
+      const lists: ListEntity[] = await this.listRepository.find({
+        relations: ['tasks', 'board'],
+      });
+      this.validateListRecords(lists);
       return lists;
     } catch (error) {
       throw ErrorManager.createSignatureError(error.message);
     }
   }
 
+  /*
+   *     Method to get a list.
+   */
   public async findListById(id: string): Promise<ListEntity> {
     try {
       const list = await this.listRepository
         .createQueryBuilder('lists')
+        .leftJoinAndSelect('lists.tasks', 'tasks')
+        .leftJoinAndSelect('lists.board', 'board')
         .where({ id })
         .getOne();
-      if (!list) {
-        throw new ErrorManager({
-          type: 'BAD_REQUEST',
-          message: 'No se encontro el registro.',
-        });
-      }
+      this.validateListFound(list);
       return list;
     } catch (error) {
       throw ErrorManager.createSignatureError(error.message);
     }
   }
 
+  /*
+   *    Method to register a new list.
+   */
   public async createList(createListDto: CreateListDto): Promise<ListEntity> {
     try {
-      return await this.listRepository.save(createListDto);
+      const { tasksIds, boardId, ...dataCreateListDto } = createListDto;
+      await this.validateBoardExists(boardId);
+      const list = await this.listRepository.save(dataCreateListDto);
+      if (tasksIds && tasksIds.length > 0)
+        await this.setTasks(list.id, tasksIds);
+      if (boardId && boardId.length > 0) await this.setBoard(list.id, boardId);
+      this.validateListFound(list);
+      return list;
     } catch (error) {
       throw ErrorManager.createSignatureError(error.message);
     }
   }
 
+  /*
+   *    Method to update a record.
+   */
   public async updateList(
     id: string,
     updateListDto: UpdateListDto,
   ): Promise<UpdateResult | undefined> {
     try {
+      const { tasksIds, boardId, ...dataUpdateListDto } = updateListDto;
       const list: UpdateResult = await this.listRepository.update(
         id,
-        updateListDto,
+        dataUpdateListDto,
       );
-
-      if (list.affected === 0) {
-        throw new ErrorManager({
-          type: 'BAD_REQUEST',
-          message: 'No se se pudo actualizar',
-        });
-      }
+      if (tasksIds && tasksIds.length > 0) await this.setTasks(id, tasksIds);
+      if (boardId && boardId.length > 0) await this.setBoard(id, boardId);
+      this.validateListUpdated(list);
       return list;
     } catch (error) {
       throw ErrorManager.createSignatureError(error.message);
     }
   }
 
+  /*
+   *    Method to delete the list.
+   */
   public async deleteList(id: string): Promise<DeleteResult | undefined> {
     try {
       const list: DeleteResult = await this.listRepository.delete(id);
-      if (list.affected === 0) {
-        throw new ErrorManager({
-          type: 'BAD_REQUEST',
-          message: 'No se se pudo eliminar',
-        });
-      }
+      this.validateListDeleted(list);
       return list;
     } catch (error) {
       throw ErrorManager.createSignatureError(error.message);
+    }
+  }
+
+  /*
+   *    Method to establish the tasks.
+   */
+  public async setTasks(id: string, taskIds: string[]): Promise<void> {
+    try {
+      const list = await this.listRepository.findOne({
+        where: { id },
+        relations: ['tasks'],
+      });
+      const tasksToAdd = await this.taskRepository.findByIds(taskIds);
+      list.tasks = tasksToAdd;
+      await this.listRepository.save(list);
+    } catch (error) {
+      throw ErrorManager.createSignatureError(error.message);
+    }
+  }
+
+  /*
+   *    Method to establish the user.
+   */
+  public async setBoard(id: string, boardId: string): Promise<void> {
+    try {
+      const list = await this.listRepository.findOne({
+        where: { id },
+        relations: ['board'],
+      });
+      const boardToAdd = await this.boardRepository.findOne({
+        where: { id: boardId },
+      });
+      list.board = boardToAdd;
+      await this.listRepository.save(list);
+    } catch (error) {
+      throw ErrorManager.createSignatureError(error.message);
+    }
+  }
+
+  public async validateBoardExists(boardId: string): Promise<void> {
+    const board = await this.boardRepository.findOne({
+      where: { id: boardId },
+    });
+
+    if (!board) {
+      throw new ErrorManager({
+        type: 'BAD_REQUEST',
+        message: `Board with ID ${boardId} not found.`,
+      });
+    }
+  }
+
+  private validateListRecords(lists: ListEntity[]): void {
+    if (lists.length === 0) {
+      throw new ErrorManager({
+        type: 'BAD_REQUEST',
+        message: 'There are no records...',
+      });
+    }
+  }
+
+  private validateListFound(list: ListEntity): void {
+    if (!list) {
+      throw new ErrorManager({
+        type: 'BAD_REQUEST',
+        message: 'Record not found.',
+      });
+    }
+  }
+
+  private validateListUpdated(list: UpdateResult): void {
+    if (list.affected === 0) {
+      throw new ErrorManager({
+        type: 'BAD_REQUEST',
+        message: 'Could not update',
+      });
+    }
+  }
+
+  private validateListDeleted(list: DeleteResult): void {
+    if (list.affected === 0) {
+      throw new ErrorManager({
+        type: 'BAD_REQUEST',
+        message: 'Could not delete',
+      });
     }
   }
 }

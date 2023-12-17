@@ -1,6 +1,10 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateListDto {
+  @IsNotEmpty()
+  @IsString()
+  boardId: string;
+
   @IsNotEmpty()
   @IsString()
   title: string;
@@ -8,4 +12,8 @@ export class CreateListDto {
   @IsString()
   @IsNotEmpty()
   description: string;
+
+  @IsOptional()
+  @IsArray()
+  readonly tasksIds: string[];
 }

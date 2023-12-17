@@ -1,6 +1,10 @@
-import { IsArray, IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateBoardDto {
+  @IsNotEmpty()
+  @IsArray()
+  readonly usersIds: string[];
+
   @IsNotEmpty()
   @IsString()
   title: string;
@@ -9,7 +13,7 @@ export class CreateBoardDto {
   @IsNotEmpty()
   description: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsArray()
-  readonly ListsIds: string[];
+  readonly listsIds: string[];
 }

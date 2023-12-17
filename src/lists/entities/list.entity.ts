@@ -6,15 +6,17 @@ import { BoardEntity } from 'src/boards/entities/board.entity';
 
 @Entity({ name: 'lists' })
 export class ListEntity extends BaseEntity implements IList {
-  @Column()
+  @Column({ type: 'varchar', length: '255' })
   title: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: '255' })
   description: string;
 
-  @ManyToOne(() => BoardEntity, (board) => board.lists)
+  @ManyToOne(() => BoardEntity, (board) => board.lists, {
+    onDelete: 'CASCADE',
+  })
   board: BoardEntity;
 
-  @OneToMany(() => TaskEntity, (task) => task.list)
+  @OneToMany(() => TaskEntity, (task) => task.list, { onDelete: 'CASCADE' })
   tasks: TaskEntity[];
 }

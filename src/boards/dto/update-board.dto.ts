@@ -1,6 +1,10 @@
-import { IsArray, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class UpdateBoardDto {
+  @IsNotEmpty()
+  @IsArray()
+  readonly usersIds: string[];
+
   @IsOptional()
   @IsString()
   title: string;
@@ -11,5 +15,5 @@ export class UpdateBoardDto {
 
   @IsOptional()
   @IsArray()
-  readonly ListsIds: string[];
+  readonly listsIds: string[];
 }
