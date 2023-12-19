@@ -8,6 +8,8 @@ import { ListsModule } from './lists/lists.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSourceConfig } from './config/data.source';
+import { CacheModule } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-redis-yet';
 
 @Module({
   imports: [
@@ -20,6 +22,17 @@ import { DataSourceConfig } from './config/data.source';
     TasksModule,
     BoardsModule,
     ListsModule,
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: async () => ({
+        store: await redisStore({
+          socket: {
+            host: 'localhost',
+            port: 6379,
+          },
+        }),
+      }),
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],

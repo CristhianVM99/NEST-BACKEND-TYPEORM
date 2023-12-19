@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,6 +6,8 @@ import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { ErrorManager } from 'src/utils/error.manager';
 import { UserEntity } from '../entities/user.entity';
 import { BoardEntity } from 'src/boards/entities/board.entity';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class UsersService {
@@ -14,6 +16,7 @@ export class UsersService {
     private readonly userRepository: Repository<UserEntity>,
     @InjectRepository(BoardEntity)
     private readonly boardRepository: Repository<BoardEntity>,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   /*
@@ -21,10 +24,14 @@ export class UsersService {
    */
   public async findUsers(): Promise<UserEntity[]> {
     try {
+      const key = 'users-find-all';
+      const usersCached = await this.cacheManager.get<UserEntity[]>(key);
+      if (usersCached) return usersCached;
       const users: UserEntity[] = await this.userRepository.find({
         relations: ['boards'],
       });
       this.validateUserRecords(users);
+      this.cacheManager.set(key, users, 1000 * 10);
       return users;
     } catch (error) {
       throw ErrorManager.createSignatureError(error.message);
@@ -36,12 +43,16 @@ export class UsersService {
    */
   public async findUserById(id: string): Promise<UserEntity> {
     try {
+      const key = `user-find-${id}`;
+      const userCached = await this.cacheManager.get<UserEntity>(key);
+      if (userCached) return userCached;
       const user = await this.userRepository
         .createQueryBuilder('users')
         .leftJoinAndSelect('users.boards', 'boards')
         .where({ id })
         .getOne();
       this.validateUserFound(user);
+      this.cacheManager.set(key, user, 1000 * 10);
       return user;
     } catch (error) {
       throw ErrorManager.createSignatureError(error.message);

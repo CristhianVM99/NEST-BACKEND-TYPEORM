@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CreateTaskDto } from '../dto/create-task.dto';
 import { UpdateTaskDto } from '../dto/update-task.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,6 +6,8 @@ import { TaskEntity } from '../entities/task.entity';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { ErrorManager } from 'src/utils/error.manager';
 import { ListEntity } from 'src/lists/entities/list.entity';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class TasksService {
@@ -14,14 +16,19 @@ export class TasksService {
     private readonly taskRepository: Repository<TaskEntity>,
     @InjectRepository(ListEntity)
     private readonly listRepository: Repository<ListEntity>,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   public async findTasks(): Promise<TaskEntity[]> {
     try {
+      const key = 'task-find-all';
+      const tasksCached = await this.cacheManager.get<TaskEntity[]>(key);
+      if (tasksCached) return tasksCached;
       const tasks: TaskEntity[] = await this.taskRepository.find({
         relations: ['list'],
       });
       this.validateTaskRecords(tasks);
+      this.cacheManager.set(key, tasks, 1000 * 10);
       return tasks;
     } catch (error) {
       throw ErrorManager.createSignatureError(error.message);
@@ -30,12 +37,16 @@ export class TasksService {
 
   public async findTaskById(id: string): Promise<TaskEntity> {
     try {
+      const key = `task-find-${id}`;
+      const taskCached = await this.cacheManager.get<TaskEntity>(key);
+      if (taskCached) return taskCached;
       const task = await this.taskRepository
         .createQueryBuilder('tasks')
         .leftJoinAndSelect('tasks.list', 'list')
         .where({ id })
         .getOne();
       this.validateTaskFound(task);
+      this.cacheManager.set(key, task, 1000 * 10);
       return task;
     } catch (error) {
       throw ErrorManager.createSignatureError(error.message);

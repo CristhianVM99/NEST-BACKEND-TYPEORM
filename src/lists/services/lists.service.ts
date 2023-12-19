@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CreateListDto } from '../dto/create-list.dto';
 import { UpdateListDto } from '../dto/update-list.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -7,6 +7,8 @@ import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { ErrorManager } from 'src/utils/error.manager';
 import { TaskEntity } from 'src/tasks/entities/task.entity';
 import { BoardEntity } from 'src/boards/entities/board.entity';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class ListsService {
@@ -17,6 +19,7 @@ export class ListsService {
     private readonly taskRepository: Repository<TaskEntity>,
     @InjectRepository(BoardEntity)
     private readonly boardRepository: Repository<BoardEntity>,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   /*
@@ -24,10 +27,14 @@ export class ListsService {
    */
   public async findLists(): Promise<ListEntity[]> {
     try {
+      const key = 'lists-find-all';
+      const listsCached = await this.cacheManager.get<ListEntity[]>(key);
+      if (listsCached) return listsCached;
       const lists: ListEntity[] = await this.listRepository.find({
         relations: ['tasks', 'board'],
       });
       this.validateListRecords(lists);
+      this.cacheManager.set(key, lists, 1000 * 10);
       return lists;
     } catch (error) {
       throw ErrorManager.createSignatureError(error.message);
@@ -39,6 +46,9 @@ export class ListsService {
    */
   public async findListById(id: string): Promise<ListEntity> {
     try {
+      const key = `list-find-${id}`;
+      const listCached = await this.cacheManager.get<ListEntity>(key);
+      if (listCached) return listCached;
       const list = await this.listRepository
         .createQueryBuilder('lists')
         .leftJoinAndSelect('lists.tasks', 'tasks')
@@ -46,6 +56,7 @@ export class ListsService {
         .where({ id })
         .getOne();
       this.validateListFound(list);
+      this.cacheManager.set(key, list, 1000 * 10);
       return list;
     } catch (error) {
       throw ErrorManager.createSignatureError(error.message);

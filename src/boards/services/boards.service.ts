@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CreateBoardDto } from '../dto/create-board.dto';
 import { UpdateBoardDto } from '../dto/update-board.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -7,6 +7,8 @@ import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { ErrorManager } from 'src/utils/error.manager';
 import { ListEntity } from 'src/lists/entities/list.entity';
 import { UserEntity } from 'src/users/entities/user.entity';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class BoardsService {
@@ -17,6 +19,7 @@ export class BoardsService {
     private readonly listRepository: Repository<ListEntity>,
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   /*
@@ -24,10 +27,14 @@ export class BoardsService {
    */
   public async findBoards(): Promise<BoardEntity[]> {
     try {
+      const key = 'boards-find-all';
+      const boardsCached = await this.cacheManager.get<BoardEntity[]>(key);
+      if (boardsCached) return boardsCached;
       const boards: BoardEntity[] = await this.boardRepository.find({
         relations: ['users', 'lists'],
       });
       this.validateBoardRecords(boards);
+      this.cacheManager.set(key, boards, 1000 * 10);
       return boards;
     } catch (error) {
       throw ErrorManager.createSignatureError(error.message);
@@ -39,6 +46,9 @@ export class BoardsService {
    */
   public async findBoardById(id: string): Promise<BoardEntity> {
     try {
+      const key = `board-find-${id}`;
+      const boardCached = await this.cacheManager.get<BoardEntity>(key);
+      if (boardCached) return boardCached;
       const board: BoardEntity = await this.boardRepository
         .createQueryBuilder('boards')
         .leftJoinAndSelect('boards.lists', 'lists')
@@ -46,6 +56,7 @@ export class BoardsService {
         .where({ id })
         .getOne();
       this.validateBoardFound(board);
+      this.cacheManager.set(key, board, 1000 * 10);
       return board;
     } catch (error) {
       throw ErrorManager.createSignatureError(error.message);

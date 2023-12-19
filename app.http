@@ -5,7 +5,7 @@
 GET http://localhost:3000/api/users/all
 
 ### get by id
-GET http://localhost:3000/api/users/55f9a645-a429-4660-a3da-90cb988c369a
+GET http://localhost:3000/api/users/8b567982-4b3e-44e0-b1f0-31bc0606a917
 
 ### post 
 POST http://localhost:3000/api/users/register
@@ -66,7 +66,7 @@ DELETE http://localhost:3000/api/boards/delete/fdcc7ba8-1925-4a0e-8d0a-0b1542545
 GET http://localhost:3000/api/lists/all
 
 ### get by id
-GET http://localhost:3000/api/lists/9f0af41c-c8bb-42e1-b926-d5b0240185f8
+GET http://localhost:3000/api/lists/e5e6cf7c-d4d9-443a-94c1-8aa553719e20
 
 ### post 
 POST http://localhost:3000/api/lists/register
